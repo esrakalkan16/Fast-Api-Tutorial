@@ -12,7 +12,8 @@ text_posts = {
     7: {"title": "Quote", "content": "Programs must be written for people to read, and only incidentally for machines to execute."},
     8: {"title": "Weekend Plans", "content": "Might finally clean up my GitHub repos… or just play some games."},
     9: {"title": "Learning Note", "content": "FastAPI automatically generates interactive API documentation."},
-    10: {"title": "Reminder", "content": "Small progress every day adds up to big results."}
+    10: {"title": "Reminder", "content": "Small progress every day adds up to big results."},
+    11:{"title": "Remove", "content": "FastAPI cool"}
 }
 
 @app.get("/posts")
