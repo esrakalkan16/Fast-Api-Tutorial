@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 
 # UUID üretmek için (benzersiz id)
 import uuid
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Nullable, String, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 # Async SQLAlchemy bileşenleri
 # - AsyncSession: async DB işlemleri
@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 # ORM taban sınıfı ve tablo ilişkileri
 from sqlalchemy.orm import DeclarativeBase, relationship
 from  datetime import datetime
-
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
+from fastapi import Depends
 # 🔹 Veritabanı bağlantı adresi
 # aiosqlite → SQLite için async driver
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -24,17 +25,23 @@ class Base(DeclarativeBase):
     pass
 
 
+class User(SQLAlchemyBaseUserTableUUID, Base):
+    posts = relationship("Post", back_populates="user")
+
 
 # 🔹 ORM MODEL
 class Post(Base):
     __tablename__ = "posts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     caption = Column(Text)
     url = Column(String, nullable=False)
     file_type = Column(String, nullable=False)
     file_name = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow())
+
+    user = relationship("User", back_populates="posts")
 
 # 🔹 Veritabanı motoru (connection)
 engine = create_async_engine(DATABASE_URL)
@@ -58,3 +65,7 @@ async def create_db_and_tables():
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+
+
+async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyUserDatabase(session, User)
